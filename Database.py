@@ -68,8 +68,8 @@ class DatabaseUI():
         self.tree_bind()
         parent.title('Database')
         parent.geometry('1200x800')
-        #parent.protocol("WM_DELETE_WINDOW", self.on_closing)   # tray menu
-        #parent.trayMenu = None
+        parent.protocol("WM_DELETE_WINDOW", self.on_closing)   # tray menu
+        parent.trayMenu = None
 
         main_menu = tk.Menu(parent)
         parent.config(menu=main_menu)
