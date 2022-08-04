@@ -1,0 +1,518 @@
+#!/usr/bin/python3-32
+# -*- coding: utf-8 -*-
+import tkinter as tk
+from tkinter import ttk as ttk
+import tkinter.font as tk_font
+from tkinter import messagebox as tkMessageBox
+from shutil import copyfile
+import sqlite3
+import random
+import time
+import datetime
+import re
+import os
+
+
+class Database_UI():
+    def __init__(self, parent):
+        self.parent = parent
+        self.folder_1 = os.getcwd()
+        self.tree_header = ['named', 'type', 'number', 'date', 'place', 'service', 'date_serv', 'date_repair', 'discription', 'id']
+        self.img1 = tk.PhotoImage(file='{}\\icon\\add.png'.format(self.folder_1))
+        self.img2 = tk.PhotoImage(file='{}\\icon\\trash.png'.format(self.folder_1))
+        self.img3 = tk.PhotoImage(file='{}\\icon\\edit.png'.format(self.folder_1))
+        self.img4 = tk.PhotoImage(file='{}\\icon\\info.png'.format(self.folder_1))
+        self.img5 = tk.PhotoImage(file='{}\\icon\\exit.png'.format(self.folder_1))
+        
+        self.level = 0
+        self.id = tk.StringVar()
+        self.named = tk.StringVar()
+        self.type = tk.StringVar()
+        self.number = tk.StringVar()
+        self.date = tk.StringVar()
+        self.place = tk.StringVar()
+        self.service = tk.StringVar()
+        self.date_serv = tk.StringVar()
+        self.date_repair = tk.StringVar()
+        self.description = tk.StringVar()
+        self.id = tk.StringVar()
+        self.today = datetime.datetime.today()
+        self.data_today = self.today.strftime('%d.%m.%Y,%H.%M.%S')
+        self.table_db = 'equipment'
+        self.widget_frame()
+        self.widget_tree()    
+        self.widget_button()
+        self.read_db(self.table_db)
+        self.widget_combobox()
+        self.tree_bind()
+        parent.title('Database-KIA')
+        parent.geometry('1200x800')
+        #parent.protocol("WM_DELETE_WINDOW", self.on_closing)
+        #parent.trayMenu = None
+
+        main_menu = tk.Menu(parent)
+        parent.config(menu=main_menu)
+        file_menu = tk.Menu(main_menu, tearoff=False)
+        file_menu.add_command(label='Новая запись', command=self.win_add)
+        file_menu.add_separator()
+        file_menu.add_command(label='Закрыть', command=parent.quit)
+
+        file_setting = tk.Menu(main_menu, tearoff=False)
+        file_setting.add_command(label='Настройки')
+        file_setting.add_command(label='Backup DB', command=self.backup)
+
+        main_menu.add_cascade(label='Файл', menu=file_menu)
+        main_menu.add_cascade(label='Настройки', menu=file_setting)
+
+    def backup(self):
+        copyfile('{}\\db_1.sqlite'.format(self.folder_1), '{}\\backup\\db_1.sqlite'.format(self.folder_1))
+        self.statusbar.config(text="Резервная копия создана", fg="darkgreen", font=("Arial", 10, 'bold'))
+
+    def about_win(self):
+        top = tk.Toplevel(self.parent, bg='alice blue')
+        top.geometry('310x280')
+        top.resizable(0, 0)
+        top.title('О программе')
+
+        text1 = ('Data Base v1.01\rDate: 2020-07-12\rAutor: I T L ©')
+        text2 = ('Состав базы данных:\r*Контрольно измерительная аппаратура*\r*Система измерительная контроля БРП*\r*Средства измерения КИА*\r*Испытательное оборудование*')
+        
+        top_1 = tk.Frame(top, bg='alice blue', height=60, relief="raise")
+        top_1.pack(side='top', fill='x')
+        top_2 = tk.Frame(top, bg='alice blue', height=200, relief="raise")
+        top_2.pack(side='top', fill='x')   
+
+        autor_about = tk.Label(top_1, bg='alice blue', text=text1).place(x=60,y=10)
+        support_about = tk.Label(top_2, bg='alice blue', text=text2, font='10').place(x=5,y=5)
+        Btn_about = tk.Button(top_2, text='OK', width=10, command=top.destroy)
+        Btn_about.place(x=90,y=150)
+        Btn_about.configure(bg="#6699CC", fg='white', highlightbackground="#0CD9E8", highlightcolor="#0DFFCC",font=("Times New Roman", 15, "bold"))
+
+    def on_closing(self):
+            if not self.parent.trayMenu:
+                selection = tkMessageBox.askyesnocancel("ВНИМАНИЕ!", "Закрыть программу?\nДа: Закрыть\nНет: Свернуть в системный трей")
+                if selection:
+                    self.parent.destroy()
+                elif selection == False:
+                    self.parent.withdraw()
+                    self.parent.tk.call('package', 'require', 'Winico')
+                    icon = self.parent.tk.call('winico', 'createfrom', '{}\\icon\\icon.ico'.format(self.folder_1))
+                    self.parent.tk.call('winico', 'taskbar', 'add', icon,
+                                '-callback', (self.parent.register(self.menu_func), '%m', '%x', '%y'),
+                                '-pos', 0,
+                                '-text', u'Database-KIA')
+
+                    self.parent.trayMenu = tk.Menu(self.parent, tearoff=False)
+                    self.parent.trayMenu.add_command(label="Открыть", command=self.parent.deiconify)
+                    cascadeMenu = tk.Menu(self.parent, tearoff=False)
+                    cascadeMenu.add_command(label="Casacde one", command=lambda :print("You could define it by yourroot"))
+                    cascadeMenu.add_command(label="Cascade two")
+                    self.parent.trayMenu.add_cascade(label="Другое", menu=cascadeMenu)
+
+                    self.parent.trayMenu.add_separator()
+
+                    self.parent.trayMenu.add_command(label="Закрыть", command=self.parent.destroy)
+
+                else:
+                    pass
+            else:
+                self.parent.withdraw()
+
+    def menu_func(self, event, x, y):
+        if event == 'WM_RBUTTONDOWN':
+            self.parent.trayMenu.tk_popup(x, y)
+        if event == 'WM_LBUTTONDOWN':
+            self.parent.deiconify()
+
+    def widget_frame(self):
+        self.frame_panel = tk.Frame(self.parent)
+        self.frame_panel.pack(side='top', fill='x')
+        self.frame_bottom = tk.Frame(self.parent)
+        self.frame_bottom.pack(side='bottom', fill='x')
+        self.frame_left = tk.Frame(self.parent, width=270, height=300)
+        self.frame_left.propagate(False)
+        self.frame_left.pack(side='left', fill='y')
+        frame_top = tk.Frame(self.parent, width=600, height=100)
+        frame_top.pack(side='top', fill='x')
+        self.frame_combo_top = tk.Frame(frame_top, width=600, height=100, bd=1, relief="raise")
+        self.frame_combo_top.pack(side='top', fill='x')
+        self.frame_tree_top = tk.Frame(frame_top, width=600, height=100, bd=1, relief="raise")
+        self.frame_tree_top.pack(side='top', fill='x')
+        self.statusbar = tk.Label(self.frame_bottom, width=30, font=('arial', 10), anchor='w')
+        self.statusbar.pack(side='left')
+        statusbar_1 = tk.Label(self.frame_bottom, text="I T L ©", fg="darkgreen", anchor='e', font=("Arial", 10, "bold"))
+        statusbar_1.pack(side='right', fill='x')
+
+    def widget_tree(self):
+        self.tree_list = self.getfilet()      
+        self.tree_left = ttk.Treeview(self.frame_left, show='tree', selectmode='browse')
+        fr_y1 = tk.Frame(self.frame_left)
+        fr_y1.pack(side='right', fill='y')
+        tk.Label(fr_y1, borderwidth=1, relief='raised', font='Arial 8').pack(side='bottom', fill='x')
+        sb_y1 = tk.Scrollbar(fr_y1, orient='vertical', command=self.tree_left.yview)
+        sb_y1.pack(expand='yes', fill='y')
+        fr_x1 = tk.Frame(self.frame_left)
+        fr_x1.pack(side='bottom', fill='x')
+        sb_x1 = tk.Scrollbar(fr_x1, orient='horizontal', command=self.tree_left.xview)
+        sb_x1.pack(expand='yes', fill='x')
+        self.tree_left.heading('#0', text='Dep', anchor='w')
+        self.tree_left.insert('', tk.END, text='Контрольно измерительная аппаратура', iid=0, open=False)
+        self.tree_left.insert('', tk.END, text='Система измерительная', iid=1, open=False)
+        self.tree_left.insert('', tk.END, text='Средства измерений', iid=2, open=False)
+        self.tree_left.insert('', tk.END, text='Испытательная аппаратура', iid=3, open=False)
+        self.tree_left.column('#0', width=250)
+        self.tree_left.configure(yscrollcommand=sb_y1.set, xscrollcommand=sb_x1.set)
+        self.tree_left.pack(fill='both', expand='yes')
+
+        self.tree_top = ttk.Treeview(self.frame_tree_top, columns=self.tree_header[0:6], height=400)
+        fr_y2 = tk.Frame(self.frame_tree_top)
+        fr_y2.pack(side='right', fill='y')
+        tk.Label(fr_y2, borderwidth=1, relief='raised', font='Arial 8').pack(side='bottom', fill='x')       
+        sb_y2 = tk.Scrollbar(fr_y2, orient='vertical', command=self.tree_top.yview)
+        sb_y2.pack(side='right', fill='y')
+        sb_x2 = tk.Scrollbar(self.frame_tree_top, orient='horizontal', command=self.tree_top.xview)        
+        sb_x2.pack(side='bottom', fill='x')
+        self.tree_top.heading('#0', text='№', anchor='w')
+        self.tree_top.heading('named', text='Наименование', anchor='w')
+        self.tree_top.heading('type', text='Тип', anchor='w')
+        self.tree_top.heading('number', text='Зав. №', anchor='w')
+        self.tree_top.heading('date', text='ПМО', anchor='w')
+        self.tree_top.heading('place', text='Место установки', anchor='w')
+        self.tree_top.heading('service', text='Тип обслуживания', anchor='w')
+        self.tree_top.column('#0', stretch=False, minwidth=40, width=40)
+        self.tree_top.column('named', width=50)
+        self.tree_top.column('type', width=50)
+        self.tree_top.column('number', width=50)
+        self.tree_top.column('date', width=50)
+        self.tree_top.column('place', width=50)
+        self.tree_top.column('service', width=50)
+        self.tree_top.configure(yscrollcommand=sb_y2.set, xscrollcommand=sb_x2.set)
+        self.tree_top.pack(fill='both', expand='yes')
+
+    def tree_bind(self):
+        self.tree_top.bind("<Double-1>", self.select_item_tree_top)
+        self.tree_top.bind("<Return>", self.select_item_tree_top)
+        self.tree_left.bind("<Return>", self.select_item_tree_left)
+        self.tree_left.bind("<Double-1>", self.select_item_tree_left)
+
+        for col in self.tree_header[0:6]:
+            self.tree_top.heading(col, command=lambda c=col: tree, anchor='w')
+            self.tree_top.column(col, width=140, anchor='w')
+
+    def getfilet(self):
+        connx = sqlite3.connect('{}\\db_1.sqlite'.format(self.folder_1))
+        c = connx.cursor()
+        filet = c.execute('SELECT named,type,number,date,place,service,date_serv,date_repair,description,id FROM equipment').fetchall()
+        c.close()
+        return filet
+
+    def widget_button(self):
+        btn_add = tk.Button(self.frame_panel, image=self.img1, command=self.win_add)
+        btn_add.pack(side='left', fill='x')
+        btn_del = tk.Button(self.frame_panel, image=self.img2, command=self.delete_write)
+        btn_del.pack(side='left', fill='x')
+        btn_edit = tk.Button(self.frame_panel, image=self.img3, command=lambda: self.select_item_tree_top("<Return>"))
+        btn_edit.pack(side='left', fill='x')
+        btn_info = tk.Button(self.frame_panel, image=self.img4, command=self.about_win)
+        btn_info.pack(side='left', fill='x')
+        btn_exit = tk.Button(self.frame_panel, image=self.img5, command=self.parent.quit)
+        btn_exit.pack(side='left', fill='x')
+
+    def widget_combobox(self):
+        self.filters = []
+        frame_y = tk.Frame(self.frame_combo_top)
+        frame_y.pack(side='right', fill='x')
+        tk.Label(self.frame_combo_top, borderwidth=1, text='           ', relief='raised', font="Arial 8").pack(side='left', fill='x')
+        for col in self.tree_header[0:6]:
+            name = 'combo_{}'.format(col)
+            self.filters.append(name)
+            setattr(self.frame_combo_top, name, ttk.Combobox(self.frame_combo_top, values=[''] + sorted(set(x[col] for x in self.list_fet)), state="readonly"))
+            getattr(self.frame_combo_top, name).pack(side="left", expand=True, fill='x')
+            getattr(self.frame_combo_top, name).bind('<<ComboboxSelected>>', self.select_from_filters)
+        tk.Label(frame_y, borderwidth=1, text='     ', relief='raised', font="Arial 8").pack(side='left', fill='x')
+        
+    def select_from_filters(self, event=None):
+        self.tree_top.delete(*self.tree_top.get_children())
+        all_filter = lambda x: all(x[f.split('_')[-1]] == getattr(self.frame_combo_top, f).get() or getattr(self.frame_combo_top, f).get() == '' for f in self.filters)
+        i3=0
+        for i2, row in enumerate(self.list_fet):
+            if all_filter(row):
+                if (len(row) - i3) % 2 == 0:
+                    self.tree_top.insert('', index=i3, text=i3+1, values=list(row.values()), tags=('oddrow',))
+                    self.tree_top.tag_configure('oddrow', background='alice blue')
+                else:
+                    self.tree_top.insert('', index=i3, text=i3+1, values=list(row.values()), tags=('evenrow',))
+                    self.tree_top.tag_configure('evenrow', background='mint cream')
+                i3 += 1
+
+    def update_combobox(self):
+        for col in self.tree_header[0:6]:
+            name = 'combo_{}'.format(col)
+            getattr(self.frame_combo_top, name).configure(values=[''] + sorted(set(x[col] for x in self.list_fet)))
+
+    def database(self):
+        self.conn = sqlite3.connect('{}\\db_1.sqlite'.format(self.folder_1))
+        self.cursor = self.conn.cursor()
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS brp (mem_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, named TEXT, type TEXT, number TEXT, date TEXT, place TEXT, service TEXT, date_serv TEXT, date_repair TEXT, description TEXT, id TEXT)")
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS equipment (mem_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, named TEXT, type TEXT, number TEXT, date TEXT, place TEXT, service TEXT, date_serv TEXT, date_repair TEXT, description TEXT, id TEXT)")
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS measuring (mem_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, named TEXT,type TEXT, number TEXT, date TEXT, place TEXT, service TEXT, date_serv TEXT, date_repair TEXT, description TEXT, id TEXT)")
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS certification (mem_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, named TEXT,type TEXT, number TEXT, date TEXT, place TEXT, service TEXT, date_serv TEXT, date_repair TEXT, description TEXT, id TEXT)")
+        #self.cursor.close()
+
+    def create_write(self):
+        if self.named.get() == "" or self.type.get() == "":# or self.number.get() == "" or self.date.get() == "" or self.place.get() == "" or self.service.get() == "":
+            self.statusbar.config(text="Пожалуйста, заполните поля!", fg="red", font=("Arial", 10, 'bold'))
+        else:
+            self.database()
+            self.cursor.execute("INSERT INTO {} (named,type,number,date,place,service,date_serv,date_repair,description,id) VALUES(?,?,?,?,?,?,?,?,?,?)".format(self.table_name[0][0]), (self.named.get(),self.type.get(),self.number.get(),self.date.get(),self.place.get(),self.service.get(),self.date_serv.get(),self.date_repair.get(),self.description.get(),self.id.get()))
+            self.conn.commit()
+            self.named.set("")
+            self.type.set("")
+            self.number.set("")
+            self.date.set("")
+            self.place.set("")
+            self.service.set("")
+            self.date_serv.set("")
+            self.date_repair.set("")
+            self.description.set("")
+            self.id.set("")
+            #self.cursor.close()
+            #self.conn.close()
+            self.read_db(self.table_db)
+            self.update_combobox()
+            self.statusbar.config(text="Данные внесены!", fg="darkgreen", font=("Arial", 10, 'bold'))
+
+    def delete_write(self):
+        try:
+            selected_item_0 = self.tree_top.selection()[0]   
+            type = self.tree_top.item(self.tree_top.selection())['values'][1]
+            number = self.tree_top.item(self.tree_top.selection())['values'][2]
+            delet = tkMessageBox.askquestion('Сообщение', 'Удалить {} №{}?'.format(type,number))
+            if delet == 'yes':
+                self.cursor.execute("DELETE FROM {} WHERE number = ?".format(self.table_name[0][0]),(number,))
+                #self.cursor.close()
+                self.conn.commit()
+                self.tree_top.delete(self.tree_top.selection()[0])
+            self.read_db(self.table_db)
+            self.update_combobox()
+        except IndexError:
+            pass
+
+    def read_db(self, name_table):
+        self.list_fet = []
+        self.dict_fet = {}
+        self.tree_top.delete(*self.tree_top.get_children())
+        self.database()
+        self.cursor.execute("SELECT * FROM {} ORDER BY type ASC".format(name_table))
+        fetch = self.cursor.fetchall()
+        self.cursor.execute("SELECT name FROM sqLite_master WHERE type='table' AND name='{}'".format(name_table))
+        self.table_name = self.cursor.fetchall()
+        
+        for i2, data in enumerate(fetch):
+            if (len(fetch) - i2) % 2 == 0:	
+                self.tree_top.insert('', index=i2, text=i2+1, values=(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9]), tags=('oddrow',))
+                self.tree_top.tag_configure('oddrow', background='mint cream')
+            else:
+                self.tree_top.insert('', index=i2, text=i2+1, values=(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9]), tags=('evenrow',))
+                self.tree_top.tag_configure('evenrow', background='alice blue')
+
+            self.id.set(random.random())
+
+            for j, item_j in enumerate(self.tree_header):
+                self.dict_fet[self.tree_header[j]] = fetch[i2][j]
+            
+            self.list_fet.append(self.dict_fet.copy())
+
+        self.statusbar.config(text="Данные прочитаны из базы данных", fg="darkgreen", font=("Arial", 10, 'bold'))        
+        #self.cursor.close()
+        #self.conn.close()     
+
+    def SetEntryText(self, txtObject, value):
+        txtObject.delete(0, tk.END)
+        txtObject.insert(0, value)
+
+    def select_item_tree_top(self, event):       
+        curItem = self.tree_top.focus()
+        sel_root = tk.Toplevel(self.parent, bg='alice blue')
+        sel_root.geometry('1100x500')
+        sel_root.resizable(0, 0)
+        sel_root.wm_title("{} зав.№{}".format(self.tree_top.item(curItem)['values'][1], self.tree_top.item(curItem)['values'][2]))
+
+        self.connx = sqlite3.connect('{}\\db_1.sqlite'.format(self.folder_1))
+        cursx = self.connx.cursor()
+        eqe = cursx.execute('SELECT * FROM {} WHERE id = ?'.format(self.table_name[0][0]),(self.tree_top.item(curItem)['values'][9],)).fetchall()
+        #cursx.close()
+        
+        Right_n = tk.Frame(sel_root, bg='alice blue', width=600, height=500)
+        Right_n.pack(side='right', fill='y')
+        Left_n = tk.Frame(sel_root, bg='alice blue', width=600, height=500)
+        Left_n.pack(side='left', fill='y')
+
+        lbl_id = tk.Label(Left_n, text="ID:", bg='alice blue')
+        lbl_id.grid(row=0, column=0)
+        self.ent_id = tk.Entry(Left_n, width=25)
+        self.ent_id.configure(background="#fff", highlightbackground="#333", highlightcolor="#fff",font=("Arial", 10, "bold"))
+        self.SetEntryText(self.ent_id,self.tree_top.item(curItem)['values'][9])
+        self.ent_id.grid(row=0, column=1)
+
+        lbl_named = tk.Label(Left_n, text="Наименование:", bg='alice blue')
+        lbl_named.grid(row=1, column=0)
+        self.ent_named = tk.Entry(Left_n, width=25) 
+        self.ent_named.configure(background="#fff", highlightbackground="#333", highlightcolor="#fff",font=("Arial", 10, "bold"))
+        self.SetEntryText(self.ent_named,self.tree_top.item(curItem)['values'][0])
+        self.ent_named.grid(row=1, column=1)
+        
+        lbl_type = tk.Label(Left_n, text="Тип:", bg='alice blue')
+        lbl_type.grid(row=2, column=0)
+        self.ent_type = tk.Entry(Left_n, width=25)   
+        self.ent_type.configure(background="#fff", highlightbackground="#333", highlightcolor="#fff",font=("Arial", 10, "bold"))
+        self.SetEntryText(self.ent_type,self.tree_top.item(curItem)['values'][1])
+        self.ent_type.grid(row=2, column=1)
+        
+        lbl_numb = tk.Label(Left_n, text="Зав. №:", bg='alice blue') 
+        lbl_numb.grid(row=3, column=0)
+        self.ent_numb = tk.Entry(Left_n, width=25) 
+        self.ent_numb.configure(background="#fff", highlightbackground="#333", highlightcolor="#fff",font=("Arial", 10, "bold"))
+        self.SetEntryText(self.ent_numb,self.tree_top.item(curItem)['values'][2]) 
+        self.ent_numb.grid(row=3, column=1)
+        
+        lbl_data = tk.Label(Left_n, text="Дата:", bg='alice blue')
+        lbl_data.grid(row=4, column=0)
+        self.ent_data = tk.Entry(Left_n, width=25)
+        self.ent_data.configure(background="#fff", highlightbackground="#333", highlightcolor="#fff",font=("Arial", 10, "bold"))
+        self.SetEntryText(self.ent_data,self.tree_top.item(curItem)['values'][3])
+        self.ent_data.grid(row=4, column=1)
+        
+        lbl_place = tk.Label(Left_n, text="Место установки:", bg='alice blue')
+        lbl_place.grid(row=5, column=0)
+        self.ent_place = tk.Entry(Left_n, width=25)
+        self.ent_place.configure(background="#fff", highlightbackground="#333", highlightcolor="#fff",font=("Arial", 10, "bold"))
+        self.SetEntryText(self.ent_place,self.tree_top.item(curItem)['values'][4])   
+        self.ent_place.grid(row=5, column=1)    
+    
+        lbl_serv = tk.Label(Left_n, text="Тип обслуживания:", bg='alice blue')
+        lbl_serv.grid(row=6, column=0)
+        self.ent_serv = tk.Entry(Left_n, width=25)
+        self.ent_serv.configure(background="#fff", highlightbackground="#333", highlightcolor="#fff",font=("Arial", 10, "bold"))
+        self.SetEntryText(self.ent_serv,self.tree_top.item(curItem)['values'][5])      
+        self.ent_serv.grid(row=6, column=1)    
+
+        lbl_disc = tk.Label(Left_n, text="Примечание:", bg='alice blue')
+        lbl_disc.grid(row=7, column=0)
+        self.ent_disc = tk.Text(Left_n, width=15)
+        self.ent_disc.configure(background="#fff", highlightbackground="#333", highlightcolor="#fff",font=("Arial", 10, "bold"))
+        self.ent_disc.insert(tk.INSERT, eqe[0][8])       
+        self.ent_disc.place(x=10, y=170, width=290, height=85)
+
+        lbl_ndata = tk.Label(Left_n, text="Новая дата:", bg='alice blue')
+        lbl_ndata.grid(row=4, column=2)
+        self.ent_ndata = tk.Entry(Left_n, width=15)
+        self.ent_ndata.configure(background="#fff", highlightbackground="#333", highlightcolor="#fff",font=("Arial", 10, "bold"))
+        self.SetEntryText(self.ent_ndata,self.tree_top.item(curItem)['values'][3])      
+        self.ent_ndata.grid(row=4, column=3)
+
+        save_btn = tk.Button(Left_n, text="Сохранить", command=self.save_detail)
+        save_btn.configure(bg="#6699CC", fg='white', highlightbackground="#0CD9E8", highlightcolor="#0DFFCC",font=("Times New Roman", 15, "bold"))
+        save_btn.place(x=200, y=450)
+        
+        lbl_list = tk.Label(Right_n, text="Данные оборудования", bg='alice blue', font=("Arial", 10, "bold"))
+        lbl_list.pack(side='top')      
+        tree_list = self.getfilet()
+        scrollbary = tk.Scrollbar(Right_n, orient='vertical')
+        scrollbary.pack(side='right', fill='y')
+        tree_sel = ttk.Treeview(Right_n, columns=self.tree_header[1:3]+self.tree_header[6:8], selectmode="extended", height=500, yscrollcommand=scrollbary.set)
+        scrollbary.config(command=tree_sel.yview)    
+        tree_sel.heading('#0', text="№", anchor='w')
+        tree_sel.heading('type', text="Тип", anchor='w')
+        tree_sel.heading('number', text="Зав. №", anchor='w')
+        tree_sel.heading('date_serv', text="История обслуживания", anchor='w')
+        tree_sel.heading('date_repair', text="История ремонта", anchor='w')
+        tree_sel.column('#0', stretch=False, minwidth=20, width=30)
+        tree_sel.column('type', width=80)
+        tree_sel.column('number', width=160)
+        tree_sel.column('date_serv', width=150)
+        tree_sel.column('date_repair', width=150)
+        tree_sel.pack(fill='both', expand='yes')
+        tree_sel.insert('', index=0, text=1, values=(self.tree_top.item(curItem)['values'][1],self.tree_top.item(curItem)['values'][2],self.tree_top.item(curItem)['values'][3]))
+
+    def save_detail(self):
+        id = self.ent_id.get()
+        named = self.ent_named.get()
+        type = self.ent_type.get()
+        number = self.ent_numb.get()
+        date = self.ent_data.get()   
+        place = self.ent_place.get()
+        service = self.ent_serv.get()
+        description = self.ent_disc.get("1.0", tk.END)
+        db = sqlite3.connect('{}\\db_1.sqlite'.format(self.folder_1))
+        cursor = db.cursor()
+        cursor.execute('UPDATE {} SET named=?,type=?,number=?,date=?,place=?,service=?,description=?,id=? WHERE id=?'.format(self.table_name[0][0]),(named,type,number,date,place,service,description,id,id,))
+        #cursor.close()
+        db.commit()
+        self.read_db(self.table_db)
+        self.update_combobox()
+
+    def select_item_tree_left(self, event):
+        self.cur_table = self.tree_left.focus()
+        if self.cur_table == '0':
+            self.table_db = 'equipment'
+        elif self.cur_table == '1':
+            self.table_db = 'brp'
+        elif self.cur_table == '2':
+            self.table_db = 'measuring'
+        elif self.cur_table == '3':
+            self.table_db = 'certification'
+        self.read_db(self.table_db)
+        self.update_combobox()
+
+    def win_add(self):
+        add_root = tk.Toplevel(self.parent, bg='alice blue')
+        add_root.geometry('500x350')
+        add_root.resizable(0, 0)
+        add_root.title('Добавление записи')
+
+        lbl_win_named = tk.Label(add_root, bg='alice blue', text="Наименование:", font=('arial', 15), bd=10)
+        lbl_win_named.grid(row=0, stick="e")
+        lbl_win_type = tk.Label(add_root, bg='alice blue', text="Тип:", font=('arial', 15), bd=10)
+        lbl_win_type.grid(row=1, stick="e")
+        lbl_win_number = tk.Label(add_root, bg='alice blue', text="Зав. №:", font=('arial', 15), bd=10)
+        lbl_win_number.grid(row=2, stick="e")
+        lbl_win_date = tk.Label(add_root, bg='alice blue', text="Дата обслуживания:", font=('arial', 15), bd=10)
+        lbl_win_date.grid(row=3, stick="e")
+        lbl_win_place = tk.Label(add_root, bg='alice blue', text="Место установки:", font=('arial', 15), bd=10)
+        lbl_win_place.grid(row=4, stick="e")
+        lbl_win_service = tk.Label(add_root, bg='alice blue', text="Тип обслуживания:", font=('arial', 15), bd=10)
+        lbl_win_service.grid(row=5, stick="e")
+
+        ent_win_named = tk.Entry(add_root, textvariable=self.named, width=23)
+        ent_win_named.grid(row=0, column=1)
+        ent_win_type = tk.Entry(add_root, textvariable=self.type, width=23)
+        ent_win_type.grid(row=1, column=1)
+        ent_win_number = tk.Entry(add_root, textvariable=self.number, width=23)
+        ent_win_number.grid(row=2, column=1)
+        ent_win_date = tk.Entry(add_root, textvariable=self.date, width=23)
+        ent_win_date.grid(row=3, column=1)
+        combo_place = ttk.Combobox(add_root, textvariable=self.place, value=['цех 1', 'цех 2', 'цех 20', 'ФИП', 'КТРВ', 'СГМетр ЛКИА', 'НИЦ'], height=4, width=20)
+        combo_place.grid(row=4, column=1)
+        combo_service = ttk.Combobox(add_root, textvariable=self.service, value=['проверка', 'поверка', 'калибровка', 'аттестация'], state='readonly', height=4, width=20)
+        combo_service.grid(row=5, column=1)
+
+        try:
+            curItem = self.tree_top.focus()
+            named = self.tree_top.item(curItem)['values'][0]
+            type = self.tree_top.item(curItem)['values'][1]
+            self.SetEntryText(ent_win_named, named)
+            self.SetEntryText(ent_win_type, type)
+        except IndexError:
+            pass
+
+        btn_win_add = tk.Button(add_root, text='Добавить запись', command=self.create_write)
+        btn_win_add.configure(bg="#6699CC", fg='white', highlightbackground="#0CD9E8", highlightcolor="#0DFFCC",font=("Times New Roman", 15, "bold"))
+        btn_win_add.grid(row=6, column=1, stick="e")
+
+
+root = tk.Tk()
+root.event_add('<<Paste>>', '<Control-igrave>')
+root.event_add("<<Copy>>", "<Control-ntilde>")
+my_gui = Database_UI(root)
+root.mainloop()

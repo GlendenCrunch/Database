@@ -1,0 +1,40 @@
+CREATE TABLE measuring( 
+  named VARCHAR(128),
+  type VARCHAR(128), 
+  number VARCHAR(128),
+  date VARCHAR(128),
+  place VARCHAR(128),
+  service VARCHAR(128),
+  date_serv VARCHAR(128),
+  date_repair VARCHAR(128),
+  description VARCHAR(128),
+  id VARCHAR(128)
+)
+
+ALTER TABLE member ADD description VARCHAR(128)
+
+ALTER TABLE equipment ADD named VARCHAR(128)
+ALTER TABLE equipment ADD date_serv VARCHAR(128)
+ALTER TABLE equipment ADD date_repair VARCHAR(128)
+
+ALTER TABLE measuring ADD named VARCHAR(128)
+ALTER TABLE measuring ADD date_serv VARCHAR(128)
+ALTER TABLE measuring ADD date_repair VARCHAR(128)
+
+ALTER TABLE certification ADD named VARCHAR(128)
+ALTER TABLE certification ADD date_serv VARCHAR(128)
+ALTER TABLE certification ADD date_repair VARCHAR(128)
+
+
+insert into measuring1 SELECT named,type,number,date,place,service,date_serv,date_repair,description,id FROM measuring
+insert into equipment1 SELECT named,type,number,date,place,service,date_serv,date_repair,description,id FROM equipment
+insert into certification1 SELECT named,type,number,date,place,service,date_serv,date_repair,description,id FROM certification
+
+DROP table measuring;				удалить
+ALTER TABLE measuring1 RENAME TO measuring;	переименовать
+
+DROP table equipment;
+ALTER TABLE equipment1 RENAME TO equipment;
+
+DROP table certification;
+ALTER TABLE certification1 RENAME TO certification;
