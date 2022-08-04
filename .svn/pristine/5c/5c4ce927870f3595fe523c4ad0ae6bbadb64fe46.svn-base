@@ -1,4 +1,0 @@
-# -*- coding: utf-8 -*-
-import subprocess
-
-subprocess.call(r'python -m PyInstaller -D -w -i C:\ITL\Database\icon.ico  -n db_1 C:\ITL\Database\db_1.py')
