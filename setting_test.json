@@ -1,4 +1,5 @@
 {
+    "filedb_name": "db_test.sqlite",
     "name_col1": "Name",
     "name_col2": "Type",
     "name_col3": "Denomination",
@@ -8,12 +9,12 @@
     "name_col7": "New Qty",
     "name_col8": "Quantity, pcs.",
     "name_col9": "Consumption History",
-
+    "name_place": [],
+    "name_service": [],
+    "tab1": "Connections",
+    "tab2": "Reports",
     "name_tab1": "Passive components",
     "name_tab2": "Transistors",
     "name_tab3": "Microcircuit",
-    "name_tab4": "Connectors, buttons",
-
-    "name_place": [],
-    "name_service": []
+    "name_tab4": "Connectors, buttons"
 }

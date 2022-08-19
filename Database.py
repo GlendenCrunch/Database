@@ -17,7 +17,6 @@ class DatabaseUI():
     def __init__(self, parent):
         self.parent = parent
         self.folder_1 = os.getcwd()
-        self.filedb_name = 'db_test.sqlite'
         self.tree_header = ['named', 'type', 'number', 'date', 'place', 'service', 'date_serv', 'date_repair', 'description', 'id']
         self.img0 = tk.PhotoImage(file=f'{self.folder_1}\\icon\\opendb.png')
         self.img1 = tk.PhotoImage(file=f'{self.folder_1}\\icon\\add.png')
@@ -30,6 +29,7 @@ class DatabaseUI():
         with open(f'{self.folder_1}\\setting_test.json','r', encoding='utf-8') as file_json:
             self.setting_json = json.load(file_json)
 
+        self.filedb_name = self.setting_json['filedb_name']
         self.name_col1 = self.setting_json['name_col1']
         self.name_col2 = self.setting_json['name_col2']
         self.name_col3 = self.setting_json['name_col3']
@@ -47,6 +47,8 @@ class DatabaseUI():
         self.name_service = self.setting_json['name_service']
 
         self.level = 0
+        self.ar10b = ('arial', 10, 'bold')
+        self.tnr15b = ("times new roman", 15, "bold")
         self.named = tk.StringVar()
         self.type = tk.StringVar()
         self.number = tk.StringVar()
@@ -61,8 +63,8 @@ class DatabaseUI():
         self.data_today = self.today.strftime('%d.%m.%Y,%H.%M.%S')
         self.table_db = 'equipment'
         self.widget_frame()
-        self.widget_button()
         self.widget_tree()
+        self.widget_button()
         self.read_db(self.table_db)
         self.widget_combobox()
         self.tree_bind()
@@ -106,7 +108,7 @@ class DatabaseUI():
             pass
 
     def setting_win(self):
-        """window setting programm"""
+        """window setting program"""
         top = tk.Toplevel(self.parent, bg='alice blue')
         top.geometry('550x400')
         top.resizable(0, 0)
@@ -114,39 +116,44 @@ class DatabaseUI():
 
         top_1 = tk.Frame(top, bg='alice blue', height=400, relief="raise")
         top_1.pack(side='top', fill='x')
+        lb1 = tk.Label(top_1, text='Текущая база данных:', bg='alice blue', font=self.ar10b)
+        lb1.place(x=5, y=5)
+        ent1 = tk.Entry(top_1, font='arial 10')
+        ent1.place(x=170, y=5)
 
-        lf1 = tk.LabelFrame(top_1, text='Название столбцов', width=200, height=300, bg='alice blue')
-        lf1.place(x=5, y=5)
-        lf2 = tk.LabelFrame(top_1, text='Название таблиц', width=330, height=300, bg='alice blue')
-        lf2.place(x=205, y=5)
+        lf1 = tk.LabelFrame(top_1, text='Название столбцов', width=200, height=300, bg='alice blue', font=self.ar10b)
+        lf1.place(x=5, y=35)
+        lf2 = tk.LabelFrame(top_1, text='Название таблиц', width=330, height=300, bg='alice blue', font=self.ar10b)
+        lf2.place(x=205, y=35)
 
-        tree_col1 = tk.Entry(lf1, font='10')
+        tree_col1 = tk.Entry(lf1, font='arial 10')
         tree_col1.place(x=5,y=5)
-        tree_col2 = tk.Entry(lf1, font='10')
+        tree_col2 = tk.Entry(lf1, font='arial 10')
         tree_col2.place(x=5,y=35)
-        tree_col3 = tk.Entry(lf1, font='10')
+        tree_col3 = tk.Entry(lf1, font='arial 10')
         tree_col3.place(x=5,y=65)
-        tree_col4 = tk.Entry(lf1, font='10')
+        tree_col4 = tk.Entry(lf1, font='arial 10')
         tree_col4.place(x=5,y=95)
-        tree_col5 = tk.Entry(lf1, font='10')
+        tree_col5 = tk.Entry(lf1, font='arial 10')
         tree_col5.place(x=5,y=125)
-        tree_col6 = tk.Entry(lf1, font='10')
+        tree_col6 = tk.Entry(lf1, font='arial 10')
         tree_col6.place(x=5,y=155)
-        tree_col7 = tk.Entry(lf1, font='10')
+        tree_col7 = tk.Entry(lf1, font='arial 10')
         tree_col7.place(x=5,y=185)
-        tree_col8 = tk.Entry(lf1, font='10')
+        tree_col8 = tk.Entry(lf1, font='arial 10')
         tree_col8.place(x=5,y=215)
-        tree_col9 = tk.Entry(lf1, font='10')
+        tree_col9 = tk.Entry(lf1, font='arial 10')
         tree_col9.place(x=5,y=245)
-        tree_tab1= tk.Entry(lf2,width=35,font='10')
+        tree_tab1= tk.Entry(lf2,width=35,font='arial 10')
         tree_tab1.place(x=5,y=5)
-        tree_tab2= tk.Entry(lf2,width=35, font='10')
+        tree_tab2= tk.Entry(lf2,width=35, font='arial 10')
         tree_tab2.place(x=5,y=35)
-        tree_tab3= tk.Entry(lf2,width=35, font='10')
+        tree_tab3= tk.Entry(lf2,width=35, font='arial 10')
         tree_tab3.place(x=5,y=65)
-        tree_tab4= tk.Entry(lf2,width=35, font='10')
+        tree_tab4= tk.Entry(lf2,width=35, font='arial 10')
         tree_tab4.place(x=5,y=95)
 
+        ent1.insert(0, self.filedb_name)
         tree_col1.insert(0, self.name_col1)
         tree_col2.insert(0, self.name_col2)
         tree_col3.insert(0, self.name_col3)
@@ -180,14 +187,14 @@ class DatabaseUI():
                 json.dump(self.setting_json, file_json, ensure_ascii=False, indent=4, sort_keys=True)
 
             self.parent.destroy()
-            os.system(f'{self.folder_1}\\DatabaseKIA.py')
+            os.system(f'{self.folder_1}\\Database.py')
 
         butok = tk.Button(top_1, text='OK', width=10, command=set_ok)
-        butok.place(x=230,y=330)
-        butok.configure(bg="#6699CC", fg='white', highlightbackground="#0CD9E8", highlightcolor="#0DFFCC",font=("Times New Roman", 15, "bold"))
+        butok.place(x=230,y=350)
+        butok.configure(bg="#6699CC", fg='white', highlightbackground="#0CD9E8", highlightcolor="#0DFFCC",font=self.tnr15b)
 
     def about_win(self):
-        """window about programm"""
+        """window about program"""
         top = tk.Toplevel(self.parent, bg='alice blue')
         top.geometry('310x280')
         top.resizable(0, 0)
@@ -207,7 +214,7 @@ class DatabaseUI():
         support.place(x=5,y=5)
         butok = tk.Button(top_2, text='OK', width=10, command=top.destroy)
         butok.place(x=90,y=150)
-        butok.configure(bg="#6699CC", fg='white', highlightbackground="#0CD9E8", highlightcolor="#0DFFCC",font=("Times New Roman", 15, "bold"))
+        butok.configure(bg="#6699CC", fg='white', highlightbackground="#0CD9E8", highlightcolor="#0DFFCC",font=self.tnr15b)
 
     def on_closing(self):
         """transfer in tray menu"""
@@ -259,28 +266,37 @@ class DatabaseUI():
         self.frame_combo_top.pack(side='top', fill='x')
         self.frame_tree_top = tk.Frame(frame_top, bg="deepskyblue3", width=600, height=100, bd=1, relief="raise")
         self.frame_tree_top.pack(side='top', fill='x')
-        self.statusbar = tk.Label(self.frame_bottom, width=143, fg="white", bg="deepskyblue3", font=("Arial", 10, "bold"), anchor='w')
+        self.statusbar = tk.Label(self.frame_bottom, width=143, fg="white", bg="deepskyblue3", font=self.ar10b, anchor='w')
         self.statusbar.pack(side='left')
-        statusbar_1 = tk.Label(self.frame_bottom, width=100, text="I T L ©", fg="white", bg="deepskyblue3", font=("Arial", 10, "bold"), anchor='e')
+        statusbar_1 = tk.Label(self.frame_bottom, width=100, text="I T L ©", fg="white", bg="deepskyblue3", font=self.ar10b, anchor='e')
         statusbar_1.pack(side='right', fill='x')
 
     def widget_tree(self):
         """widget treeview left and top"""
-        self.tree_left = ttk.Treeview(self.frame_left, show='tree', selectmode='browse')
-        fr_y1 = tk.Frame(self.frame_left)
+        tab_control = ttk.Notebook(self.frame_left)
+        self.tab1 = ttk.Frame(tab_control)
+        self.tab2 = ttk.Frame(tab_control)
+        tab_control.add(self.tab1, text='Connections')
+        tab_control.add(self.tab2, text='Reports')
+        tab_control.pack(expand=1, fill='both')
+
+        self.tree_left = ttk.Treeview(self.tab1, show='tree', selectmode='browse')
+        fr_y1 = tk.Frame(self.tab1)
         fr_y1.pack(side='right', fill='y')
         tk.Label(fr_y1, borderwidth=1, relief='raised', font='Arial 8').pack(side='bottom', fill='x')
         sb_y1 = tk.Scrollbar(fr_y1, orient='vertical', command=self.tree_left.yview)
         sb_y1.pack(expand='yes', fill='y')
-        fr_x1 = tk.Frame(self.frame_left)
+        fr_x1 = tk.Frame(self.tab1)
         fr_x1.pack(side='bottom', fill='x')
         sb_x1 = tk.Scrollbar(fr_x1, orient='horizontal', command=self.tree_left.xview)
         sb_x1.pack(expand='yes', fill='x')
         self.tree_left.heading('#0', text='Dep', anchor='w')
-        self.tree_left.insert('', tk.END, text=self.name_tab1, iid=0, open=False)
-        self.tree_left.insert('', tk.END, text=self.name_tab2, iid=1, open=False)
-        self.tree_left.insert('', tk.END, text=self.name_tab3, iid=2, open=False)
-        self.tree_left.insert('', tk.END, text=self.name_tab4, iid=3, open=False)
+        self.one_tree = self.tree_left.insert('', tk.END, text=self.filedb_name, open=True)
+        self.tree_left.insert(self.one_tree, tk.END, text=self.name_tab1, iid=0)
+        self.tree_left.insert(self.one_tree, tk.END, text=self.name_tab2, iid=1)
+        self.tree_left.insert(self.one_tree, tk.END, text=self.name_tab3, iid=2)
+        self.tree_left.insert(self.one_tree, tk.END, text=self.name_tab4, iid=3)
+        
         self.tree_left.column('#0', width=250)
         self.tree_left.configure(yscrollcommand=sb_y1.set, xscrollcommand=sb_x1.set)
         self.tree_left.pack(fill='both', expand='yes')
@@ -473,62 +489,62 @@ class DatabaseUI():
         Right_n = tk.Frame(sel_root, bg='alice blue', width=600, height=500)
         Right_n.pack(side='left', fill='y')
 
-        lbl_list1 = tk.Label(Left_n, text="", bg='alice blue', font=("Arial", 10, "bold"))
+        lbl_list1 = tk.Label(Left_n, text="", bg='alice blue', font=self.ar10b)
         lbl_list1.grid(row=0, column=0)
 
         lbl_id = tk.Label(Left_n, text="ID", bg='alice blue')
         lbl_id.grid(row=1, column=0)
-        self.ent_id = tk.Entry(Left_n, width=25, font=("Arial", 10, "bold"))
+        self.ent_id = tk.Entry(Left_n, width=25, font=self.ar10b)
         self.SetEntryText(self.ent_id,self.tree_top.item(curitem)['values'][9])
         self.ent_id.grid(row=1, column=1)
 
         lbl_named = tk.Label(Left_n, text=self.name_col1, bg='alice blue')
         lbl_named.grid(row=2, column=0)
-        self.ent_named = tk.Entry(Left_n, width=25, font=("Arial", 10, "bold"))
+        self.ent_named = tk.Entry(Left_n, width=25, font=self.ar10b)
         self.SetEntryText(self.ent_named,self.tree_top.item(curitem)['values'][0])
         self.ent_named.grid(row=2, column=1)
 
         lbl_type = tk.Label(Left_n, text=self.name_col2, bg='alice blue')
         lbl_type.grid(row=3, column=0)
-        self.ent_type = tk.Entry(Left_n, width=25, font=("Arial", 10, "bold"))
+        self.ent_type = tk.Entry(Left_n, width=25, font=self.ar10b)
         self.SetEntryText(self.ent_type,self.tree_top.item(curitem)['values'][1])
         self.ent_type.grid(row=3, column=1)
 
         lbl_numb = tk.Label(Left_n, text=self.name_col3, bg='alice blue')
         lbl_numb.grid(row=4, column=0)
-        self.ent_numb = tk.Entry(Left_n, width=25, font=("Arial", 10, "bold"))
+        self.ent_numb = tk.Entry(Left_n, width=25, font=self.ar10b)
         self.SetEntryText(self.ent_numb,self.tree_top.item(curitem)['values'][2])
         self.ent_numb.grid(row=4, column=1)
 
         lbl_data = tk.Label(Left_n, text=self.name_col4, bg='alice blue')
         lbl_data.grid(row=5, column=0)
-        self.ent_data = tk.Entry(Left_n, width=25, font=("Arial", 10, "bold"))
+        self.ent_data = tk.Entry(Left_n, width=25, font=self.ar10b)
         self.SetEntryText(self.ent_data,self.tree_top.item(curitem)['values'][3])
         self.ent_data.grid(row=5, column=1)
 
         lbl_place = tk.Label(Left_n, text=self.name_col5, bg='alice blue')
         lbl_place.grid(row=6, column=0)
-        self.ent_place = tk.Entry(Left_n, width=25, font=("Arial", 10, "bold"))
+        self.ent_place = tk.Entry(Left_n, width=25, font=self.ar10b)
         self.SetEntryText(self.ent_place,self.tree_top.item(curitem)['values'][4])
         self.ent_place.grid(row=6, column=1)
 
         lbl_serv = tk.Label(Left_n, text=self.name_col6, bg='alice blue')
         lbl_serv.grid(row=7, column=0)
-        self.ent_serv = tk.Entry(Left_n, width=25, font=("Arial", 10, "bold"))
+        self.ent_serv = tk.Entry(Left_n, width=25, font=self.ar10b)
         self.SetEntryText(self.ent_serv,self.tree_top.item(curitem)['values'][5])
         self.ent_serv.grid(row=7, column=1)
 
         lbl_disc = tk.Label(Left_n, text="Примечание:", bg='alice blue')
         lbl_disc.grid(row=8, column=0)
-        self.ent_disc = tk.Text(Left_n, width=15, font=("Arial", 10, "bold"))
+        self.ent_disc = tk.Text(Left_n, width=15, font=self.ar10b)
         self.ent_disc.insert(tk.INSERT, eqe[0][8])
         self.ent_disc.place(x=10, y=190, width=290, height=85)
 
         save_btn = tk.Button(Left_n, text="Сохранить", command=self.save_detail)
-        save_btn.configure(bg="#6699CC", fg='white', highlightbackground="#0CD9E8", highlightcolor="#0DFFCC",font=("Times New Roman", 15, "bold"))
+        save_btn.configure(bg="#6699CC", fg='white', highlightbackground="#0CD9E8", highlightcolor="#0DFFCC",font=self.tnr15b)
         save_btn.place(x=100, y=450)
 
-        lbl_list = tk.Label(Right_n, text="Данные оборудования", bg='alice blue', font=("Arial", 10, "bold"))
+        lbl_list = tk.Label(Right_n, text="Данные оборудования", bg='alice blue', font=self.ar10b)
         lbl_list.pack(side='top')
         scrollbary = tk.Scrollbar(Right_n, orient='vertical')
         scrollbary.pack(side='right', fill='y')
@@ -548,7 +564,7 @@ class DatabaseUI():
         tree_sel.insert('', index=0, text=1, values=(self.tree_top.item(curitem)['values'][1],self.tree_top.item(curitem)['values'][2],self.tree_top.item(curitem)['values'][3]))
 
     def save_detail(self):
-        """save detail in database"""
+        """save changes in database"""
         id = self.ent_id.get()
         named = self.ent_named.get()
         type = self.ent_type.get()
@@ -621,7 +637,7 @@ class DatabaseUI():
             pass
 
         btn_win_add = tk.Button(add_root, text='Добавить запись', command=self.create_write)
-        btn_win_add.configure(bg="#6699CC", fg='white', highlightbackground="#0CD9E8", highlightcolor="#0DFFCC",font=("Times New Roman", 15, "bold"))
+        btn_win_add.configure(bg="#6699CC", fg='white', highlightbackground="#0CD9E8", highlightcolor="#0DFFCC",font=self.tnr15b)
         btn_win_add.grid(row=6, column=1, stick="e")
 
 
